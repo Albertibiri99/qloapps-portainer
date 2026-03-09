@@ -1,0 +1,46 @@
+version: "3.9"
+
+services:
+  qloapps:
+    build:
+      context: ./qloapps
+      dockerfile: Dockerfile
+    container_name: qloapps_app
+    restart: unless-stopped
+    depends_on:
+      - mysql
+    ports:
+      - "8088:80"
+    volumes:
+      - qloapps_app_data:/var/www/html
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 120s
+
+  mysql:
+    image: mysql:8.0
+    container_name: qloapps_db
+    restart: unless-stopped
+    command: --default-authentication-plugin=mysql_native_password
+    environment:
+      MYSQL_ROOT_PASSWORD: cambia_esto_root
+      MYSQL_DATABASE: qloapps
+      MYSQL_USER: qloapps
+      MYSQL_PASSWORD: cambia_esto_db
+    volumes:
+      - qloapps_db_data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p$$MYSQL_ROOT_PASSWORD || exit 1"]
+      interval: 20s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
+
+volumes:
+  qloapps_app_data:
+  qloapps_db_data:
